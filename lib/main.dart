@@ -2,73 +2,42 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  static const MethodChannel _channel = MethodChannel('com.example.location_channel');
+
+  String _location = "Waiting for location...";
+
+  @override
+  void initState() {
+    super.initState();
+    _channel.setMethodCallHandler(_handleMethodCall);
+  }
+
+  Future<void> _handleMethodCall(MethodCall call) async {
+    if (call.method == "locationUpdate") {
+      final double lat = call.arguments['latitude'];
+      final double lng = call.arguments['longitude'];
+      setState(() {
+        _location = "Lat: $lat, Lng: $lng";
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: LocationServiceController(),
-    );
-  }
-}
-
-class LocationServiceController extends StatefulWidget {
-  @override
-  _LocationServiceControllerState createState() => _LocationServiceControllerState();
-}
-
-class _LocationServiceControllerState extends State<LocationServiceController> {
-  static const platform = MethodChannel('com.example.backgroud_location/service');
-  String _serviceStatus = 'Service not running';
-
-  Future<void> _startService() async {
-    try {
-      final String result = await platform.invokeMethod('startLocationService');
-      setState(() {
-        _serviceStatus = result;
-      });
-    } on PlatformException catch (e) {
-      setState(() {
-        _serviceStatus = "Failed to start: '${e.message}'.";
-      });
-    }
-  }
-
-  Future<void> _stopService() async {
-    try {
-      final String result = await platform.invokeMethod('stopLocationService');
-      setState(() {
-        _serviceStatus = result;
-      });
-    } on PlatformException catch (e) {
-      setState(() {
-        _serviceStatus = "Failed to stop: '${e.message}'.";
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Background Location Service')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(_serviceStatus),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _startService,
-              child: Text('Start Service'),
-            ),
-            ElevatedButton(
-              onPressed: _stopService,
-              child: Text('Stop Service'),
-            ),
-          ],
-        ),
+      home: Scaffold(
+        appBar: AppBar(title: const Text('Location Tracker')),
+        body: Center(child: Text(_location, style: const TextStyle(fontSize: 20))),
       ),
     );
   }

@@ -2,14 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class LocationTrackerScreen extends StatefulWidget {
+  const LocationTrackerScreen({super.key});
+
   @override
-  _LocationTrackerScreenState createState() => _LocationTrackerScreenState();
+  State<LocationTrackerScreen> createState() => _LocationTrackerScreenState();
 }
 
 class _LocationTrackerScreenState extends State<LocationTrackerScreen> {
-  final _platform = const MethodChannel('com.example.backgroud_location/service');
-  String _lastLocation = 'No location updates yet';
-  List<String> _locationHistory = [];
+  final _serviceChannel = const MethodChannel('com.example.backgroud_location/service');
+  final _locationChannel = const MethodChannel('location_updates');
+
+  String _serviceStatus = 'Service not running';
+  List<Map<String, dynamic>> _locationHistory = [];
 
   @override
   void initState() {
@@ -18,20 +22,17 @@ class _LocationTrackerScreenState extends State<LocationTrackerScreen> {
   }
 
   void _setupLocationListener() {
-    const channel = MethodChannel('location_updates');
-
-    channel.setMethodCallHandler((call) async {
-      if (call.method == 'onLocationUpdate') {
-        final lat = call.arguments['latitude'];
-        final lng = call.arguments['longitude'];
-        final timestamp = DateTime.fromMillisecondsSinceEpoch(
-            call.arguments['timestamp']
-        ).toString().substring(0, 19);
+    _locationChannel.setMethodCallHandler((call) async {
+      if (call.method == 'onLocationUpdate' && mounted) {
+        final locationData = {
+          'latitude': call.arguments['latitude'],
+          'longitude': call.arguments['longitude'],
+          'timestamp': DateTime.fromMillisecondsSinceEpoch(call.arguments['timestamp']),
+        };
 
         setState(() {
-          _lastLocation = 'Lat: $lat, Lng: $lng\n$timestamp';
-          _locationHistory.insert(0, _lastLocation);
-          if (_locationHistory.length > 10) {
+          _locationHistory.insert(0, locationData);
+          if (_locationHistory.length > 20) {
             _locationHistory.removeLast();
           }
         });
@@ -41,26 +42,38 @@ class _LocationTrackerScreenState extends State<LocationTrackerScreen> {
 
   Future<void> _startService() async {
     try {
-      await _platform.invokeMethod('startLocationService');
+      await _serviceChannel.invokeMethod('startLocationService');
+      setState(() {
+        _serviceStatus = 'Service running';
+      });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Location service started')),
+        const SnackBar(content: Text('Location service started')),
       );
     } on PlatformException catch (e) {
+      setState(() {
+        _serviceStatus = 'Failed to start service';
+      });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed: ${e.message}')),
+        SnackBar(content: Text('Error: ${e.message}')),
       );
     }
   }
 
   Future<void> _stopService() async {
     try {
-      await _platform.invokeMethod('stopLocationService');
+      await _serviceChannel.invokeMethod('stopLocationService');
+      setState(() {
+        _serviceStatus = 'Service stopped';
+      });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Location service stopped')),
+        const SnackBar(content: Text('Location service stopped')),
       );
     } on PlatformException catch (e) {
+      setState(() {
+        _serviceStatus = 'Failed to stop service';
+      });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed: ${e.message}')),
+        SnackBar(content: Text('Error: ${e.message}')),
       );
     }
   }
@@ -68,48 +81,54 @@ class _LocationTrackerScreenState extends State<LocationTrackerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Background Location Tracker')),
+      appBar: AppBar(
+        title: const Text('Background Location Tracker'),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    Text('Last Location', style: TextStyle(fontWeight: FontWeight.bold)),
-                    SizedBox(height: 8),
-                    Text(_lastLocation),
+                    const Text('Service Status', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Text(_serviceStatus),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton(
+                          onPressed: _startService,
+                          child: const Text('Start Service'),
+                        ),
+                        ElevatedButton(
+                          onPressed: _stopService,
+                          child: const Text('Stop Service'),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
+            const Text('Recent Locations', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
             Expanded(
               child: ListView.builder(
                 itemCount: _locationHistory.length,
                 itemBuilder: (context, index) {
+                  final loc = _locationHistory[index];
                   return ListTile(
-                    title: Text(_locationHistory[index]),
+                    title: Text('Lat: ${loc['latitude']?.toStringAsFixed(6)}, Lng: ${loc['longitude']?.toStringAsFixed(6)}'),
+                    subtitle: Text('Time: ${loc['timestamp']}'),
+                    dense: true,
                   );
                 },
               ),
-            ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  onPressed: _startService,
-                  child: Text('Start Service'),
-                ),
-                ElevatedButton(
-                  onPressed: _stopService,
-                  child: Text('Stop Service'),
-                ),
-              ],
             ),
           ],
         ),

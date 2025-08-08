@@ -1,42 +1,23 @@
 package com.example.backgroud_location
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.Service
-import android.content.Context
+import android.Manifest
+import android.app.*
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.location.Location
 import android.os.Build
 import android.os.IBinder
-import android.os.Looper
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.android.gms.location.*
+import io.flutter.plugin.common.MethodChannel
 
 class LocationForegroundService : Service() {
-    companion object {
-        fun startService(context: Context) {
-            val intent = Intent(context, LocationForegroundService::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
-            }
-        }
-
-        fun stopService(context: Context) {
-            val intent = Intent(context, LocationForegroundService::class.java)
-            context.stopService(intent)
-        }
-    }
-
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
-
+    lateinit var methodChannel: MethodChannel
     override fun onCreate() {
         super.onCreate()
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         startForegroundService()
         startLocationUpdates()
     }
@@ -47,11 +28,7 @@ class LocationForegroundService : Service() {
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                channelName,
-                NotificationManager.IMPORTANCE_LOW
-            )
+            val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW)
             notificationManager.createNotificationChannel(channel)
         }
 
@@ -62,21 +39,15 @@ class LocationForegroundService : Service() {
             .build()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            // For Android 10+ (API 29+)
-            val serviceType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                Service.FOREGROUND_SERVICE_TYPE_LOCATION
-            } else {
-                // For API 29, use the raw value (1 shl 1)
-                2
-            }
-            startForeground(1, notification, serviceType)
+            startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
         } else {
-            // For pre-Android 10
             startForeground(1, notification)
         }
     }
 
     private fun startLocationUpdates() {
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
         val locationRequest = LocationRequest.create().apply {
             interval = 5000
             fastestInterval = 3000
@@ -89,15 +60,18 @@ class LocationForegroundService : Service() {
                 val location: Location? = result.lastLocation
                 location?.let {
                     Log.d("LocationService", "Lat: ${it.latitude}, Lng: ${it.longitude}")
+                    sendLocationToFlutter(location.latitude, location.longitude)
                 }
             }
         }
 
-        fusedLocationClient.requestLocationUpdates(
-            locationRequest,
-            locationCallback,
-            Looper.getMainLooper()
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            fusedLocationClient.requestLocationUpdates(
+                locationRequest,
+                locationCallback,
+                mainLooper
+            )
+        }
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -106,4 +80,12 @@ class LocationForegroundService : Service() {
         super.onDestroy()
         fusedLocationClient.removeLocationUpdates(locationCallback)
     }
+    fun sendLocationToFlutter(latitude: Double, longitude: Double) {
+        val args = mapOf("latitude" to latitude, "longitude" to longitude)
+
+        if (::fusedLocationClient.isInitialized) {
+            MainActivity.channel.invokeMethod("locationUpdate", args)
+        }
+    }
+
 }
