@@ -3,31 +3,50 @@ package com.example.backgroud_location
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugins.GeneratedPluginRegistrant
 
 class MainActivity : FlutterActivity() {
     companion object {
-        lateinit var channel: MethodChannel
-        private const val CHANNEL = "com.example.location_channel"
+        var serviceChannel: MethodChannel? = null
+        var locationChannel: MethodChannel? = null
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
-        super.configureFlutterEngine(flutterEngine)
+        GeneratedPluginRegistrant.registerWith(flutterEngine)
 
-        channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
+        serviceChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.example.backgroud_location/service")
+        locationChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "location_updates")
+
+        serviceChannel?.setMethodCallHandler { call, result ->
+            when (call.method) {
+                "startLocationService" -> {
+                    startLocationService()
+                    result.success(null)
+                }
+                "stopLocationService" -> {
+                    stopLocationService()
+                    result.success(null)
+                }
+                else -> result.notImplemented()
+            }
+        }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
+    private fun startLocationService() {
+        val intent = Intent(this, LocationForegroundService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val serviceIntent = Intent(this, LocationForegroundService::class.java)
-            startForegroundService(serviceIntent)
+            ContextCompat.startForegroundService(this, intent)
         } else {
-            val serviceIntent = Intent(this, LocationForegroundService::class.java)
-            startService(serviceIntent)
+            startService(intent)
         }
+    }
+
+    private fun stopLocationService() {
+        val intent = Intent(this, LocationForegroundService::class.java)
+        stopService(intent)
     }
 }
