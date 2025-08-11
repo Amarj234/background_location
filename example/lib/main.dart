@@ -1,7 +1,8 @@
+import 'package:background_location_runner/background_location_fetch.dart';
+import 'package:background_location_runner/location_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'background_location_fetch.dart';
-import 'location_model.dart';
+
 // import the new class here
 
 void main() {
