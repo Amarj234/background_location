@@ -33,7 +33,9 @@ Add the following permissions to your android/app/src/main/AndroidManifest.xml i
 
 xml
 Copy
-Edit
+Edit  
+
+```xml
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
@@ -43,16 +45,31 @@ Edit
 <!-- For Android 13+ notification permission (if your service shows notifications) -->
 <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 Foreground Service
-
+xml
+Copy
+Edit
 Make sure your app declares a foreground service in the manifest (if applicable):
 
 xml
 Copy
 Edit
-<service
-    android:name=".YourLocationService"
-    android:foregroundServiceType="location"
-    android:exported="false" />
+
+```xml
+     <service
+            android:name=".LocationForegroundService"
+            android:foregroundServiceType="location"
+            android:enabled="true"
+            android:exported="false" />
+
+
+        <service
+            android:name="id.flutter.flutter_background_service.FlutterBackgroundService"
+            android:foregroundServiceType="location|dataSync"
+            android:enabled="true"
+            android:exported="false" />
+xml
+Copy
+Edit
 Location Settings
 
 Ensure your device location settings allow background location tracking.
@@ -60,9 +77,7 @@ Ensure your device location settings allow background location tracking.
 iOS Setup
 Open your ios/Runner/Info.plist and add these keys:
 
-xml
-Copy
-Edit
+```xml
 <key>NSLocationWhenInUseUsageDescription</key>
 <string>This app requires location access to track your location while using the app.</string>
 <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
@@ -86,6 +101,7 @@ Import and create an instance of BackgroundLocationFetch (replace with your clas
 dart
 Copy
 Edit
+```xml
 import 'package:background_location_runner/background_location_fetch.dart';
 
 final BackgroundLocationFetch locationService = BackgroundLocationFetch();
