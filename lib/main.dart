@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -9,12 +8,9 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: LocationTrackerScreen(),
-    );
+    return MaterialApp(home: const LocationTrackerScreen());
   }
 }
 
@@ -31,48 +27,50 @@ class _LocationTrackerScreenState extends State<LocationTrackerScreen> {
   );
   final _locationChannel = const MethodChannel('location_updates');
 
-  // New channel for iOS direct fetch
-  final _iosLocationChannel = const MethodChannel('location_data');
-
   String _serviceStatus = 'Service not running';
   List<Map<String, dynamic>> _locationHistory = [];
 
   @override
   void initState() {
     super.initState();
-    if (!Platform.isIOS) {
-      _setupLocationListener();
-    }
+    _setupLocationListener();
   }
 
   void _setupLocationListener() {
-    _locationChannel.setMethodCallHandler((call) async {
-      if (call.method == 'onLocationUpdate' && mounted) {
-        final latitude = (call.arguments['latitude'] as num).toDouble();
-        final longitude = (call.arguments['longitude'] as num).toDouble();
-        final timestampMs = call.arguments['timestamp'] as int;
-        final locationData = {
-          'latitude': latitude,
-          'longitude': longitude,
-          'timestamp': DateTime.fromMillisecondsSinceEpoch(timestampMs),
-        };
+    try {
+      _locationChannel.setMethodCallHandler((call) async {
+        if (call.method == 'onLocationUpdate' && mounted) {
+          final latitude = (call.arguments['latitude'] as num).toDouble();
+          final longitude = (call.arguments['longitude'] as num).toDouble();
+          final timestampMs = call.arguments['timestamp'] as int;
+          final locationData = {
+            'latitude': latitude,
+            'longitude': longitude,
+            'timestamp': DateTime.fromMillisecondsSinceEpoch(timestampMs),
+          };
 
-        setState(() {
-          _locationHistory.insert(0, locationData);
-          if (_locationHistory.length > 20) _locationHistory.removeLast();
-        });
-      }
-    });
+          setState(() {
+            _locationHistory.insert(0, locationData);
+            if (_locationHistory.length > 20) _locationHistory.removeLast();
+          });
+        }
+      });
+    }catch(e){
+      print("object $e");
+    }
   }
 
   Future<bool> _requestPermissions() async {
+    // Android 13+ notification permission may be needed to show notifications.
     if (await Permission.notification.isDenied) {
       await Permission.notification.request();
     }
 
+    // When-in-use then Always (background) if you need background tracking
     var whenInUse = await Permission.locationWhenInUse.request();
     if (!whenInUse.isGranted) return false;
 
+    // Request "always" for background service (user must allow "Allow all the time")
     var always = await Permission.locationAlways.request();
     return always.isGranted;
   }
@@ -80,79 +78,49 @@ class _LocationTrackerScreenState extends State<LocationTrackerScreen> {
   Future<void> _startService() async {
     final ok = await _requestPermissions();
     if (!ok) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please allow "Always" location permission.'),
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please allow "Always" location permission.'),
+        ),
+      );
       return;
     }
 
     try {
-      if (Platform.isIOS) {
-        // Delay iOS fetch until UI is drawn
-        WidgetsBinding.instance.addPostFrameCallback((_) async {
-          try {
-            final lastLocation = await _iosLocationChannel
-                .invokeMethod<Map<dynamic, dynamic>>('getLastLocation');
 
-            if (lastLocation != null && mounted) {
-              setState(() {
-                _locationHistory.insert(0, {
-                  'latitude':
-                  (lastLocation['latitude'] as num).toDouble(),
-                  'longitude':
-                  (lastLocation['longitude'] as num).toDouble(),
-                  'timestamp': DateTime.now(),
-                });
-              });
-            }
-          } catch (e) {
-            debugPrint("iOS location fetch failed: $e");
-          }
-        });
-      } else {
-        await _serviceChannel.invokeMethod('startLocationService');
-      }
-
-      if (mounted) {
-        setState(() {
-          _serviceStatus = 'Service running';
-        });
-      }
+      await _serviceChannel.invokeMethod('startLocationService');
+      setState(() {
+        _serviceStatus = 'Service running';
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Location service started')));
     } on PlatformException catch (e) {
-      if (mounted) {
-        setState(() {
-          _serviceStatus = 'Failed to start service';
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.message}')),
-        );
-      }
+      setState(() {
+        _serviceStatus = 'Failed to start service';
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
     }
   }
 
   Future<void> _stopService() async {
     try {
-      if (!Platform.isIOS) {
-        await _serviceChannel.invokeMethod('stopLocationService');
-      }
-      if (mounted) {
-        setState(() {
-          _serviceStatus = 'Service stopped';
-        });
-      }
+      await _serviceChannel.invokeMethod('stopLocationService');
+      setState(() {
+        _serviceStatus = 'Service stopped';
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Location service stopped')));
     } on PlatformException catch (e) {
-      if (mounted) {
-        setState(() {
-          _serviceStatus = 'Failed to stop service';
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.message}')),
-        );
-      }
+      setState(() {
+        _serviceStatus = 'Failed to stop service';
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
     }
   }
 
@@ -207,8 +175,7 @@ class _LocationTrackerScreenState extends State<LocationTrackerScreen> {
                   final dt = loc['timestamp'] as DateTime;
                   return ListTile(
                     title: Text(
-                      'Lat: ${(loc['latitude'] as double).toStringAsFixed(6)}, '
-                          'Lng: ${(loc['longitude'] as double).toStringAsFixed(6)}',
+                      'Lat: ${(loc['latitude'] as double).toStringAsFixed(6)}, Lng: ${(loc['longitude'] as double).toStringAsFixed(6)}',
                     ),
                     subtitle: Text('Time: $dt'),
                     dense: true,
