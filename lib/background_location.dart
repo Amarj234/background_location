@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'ios_location_helper.dart';
+import 'background_location_fetch.dart';
 // import the new class here
 
 void main() {
@@ -23,7 +23,7 @@ class LocationTrackerScreen extends StatefulWidget {
 }
 
 class _LocationTrackerScreenState extends State<LocationTrackerScreen> {
-   final LocationService locationService = LocationService();
+   final BackgroundLocationFetch locationService = BackgroundLocationFetch();
 
   String _serviceStatus = 'Service not running';
   List<Map<String, dynamic>> _locationHistory = [];

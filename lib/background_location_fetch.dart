@@ -4,13 +4,13 @@ import 'package:permission_handler/permission_handler.dart';
 
 typedef LocationUpdateCallback = void Function(Map<String, dynamic> locationData);
 
-class LocationService {
+class BackgroundLocationFetch {
   static const MethodChannel _locationChannel = MethodChannel('location_updates');
   final _serviceChannel = const MethodChannel('com.example.backgroud_location/service');
 
   LocationUpdateCallback? onLocationUpdate;
 
-  LocationService() {
+  BackgroundLocationFetch() {
     _locationChannel.setMethodCallHandler(_handleMethodCall);
   }
 
