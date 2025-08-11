@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'background_location_fetch.dart';
+import 'location_model.dart';
 // import the new class here
 
 void main() {
@@ -26,7 +27,7 @@ class _LocationTrackerScreenState extends State<LocationTrackerScreen> {
    final BackgroundLocationFetch locationService = BackgroundLocationFetch();
 
   String _serviceStatus = 'Service not running';
-  List<Map<String, dynamic>> _locationHistory = [];
+  List<LocationDataModel> _locationHistory = [];
 
   @override
   void initState() {
@@ -38,6 +39,7 @@ class _LocationTrackerScreenState extends State<LocationTrackerScreen> {
       setState(() {
         _locationHistory.insert(0, locationData);
         if (_locationHistory.length > 20) _locationHistory.removeLast();
+        _serviceStatus="Service running";
       });
     };
   }
@@ -79,10 +81,10 @@ class _LocationTrackerScreenState extends State<LocationTrackerScreen> {
                 itemCount: _locationHistory.length,
                 itemBuilder: (context, index) {
                   final loc = _locationHistory[index];
-                  final dt = loc['timestamp'] as DateTime;
+                  final dt = loc.timestamp;
                   return ListTile(
                     title: Text(
-                      'Lat: ${(loc['latitude'] as double).toStringAsFixed(6)}, Lng: ${(loc['longitude'] as double).toStringAsFixed(6)}',
+                      'Lat: ${(loc.latitude).toStringAsFixed(6)}, Lng: ${(loc.longitude).toStringAsFixed(6)}',
                     ),
                     subtitle: Text('Time: $dt'),
                     dense: true,

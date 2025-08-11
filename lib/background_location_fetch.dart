@@ -2,7 +2,9 @@
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-typedef LocationUpdateCallback = void Function(Map<String, dynamic> locationData);
+import 'location_model.dart';
+
+typedef LocationUpdateCallback = void Function(LocationDataModel locationData);
 
 class BackgroundLocationFetch {
   static const MethodChannel _locationChannel = MethodChannel('location_updates');
@@ -20,14 +22,17 @@ class BackgroundLocationFetch {
       final longitude = (call.arguments['longitude'] as num).toDouble();
       final timestampMs = call.arguments['timestamp'] as int;
 
+
       final locationData = {
         'latitude': latitude,
         'longitude': longitude,
-        'timestamp': DateTime.fromMillisecondsSinceEpoch(timestampMs),
+        'timestamp': timestampMs,
       };
 
+      LocationDataModel locationDataModel = LocationDataModel.fromMap(locationData);
+
       if (onLocationUpdate != null) {
-        onLocationUpdate!(locationData);
+        onLocationUpdate!(locationDataModel);
       }
     }
     return null;
