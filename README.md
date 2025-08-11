@@ -25,12 +25,12 @@ dependencies:
       url: https://github.com/Amarj234/background_location_runner.git
       ref: main
 
----
-Android Setup
+```
+#Android Setup
 Permissions
-Add the following permissions to your android/app/src/main/AndroidManifest.xml inside the <manifest> tag:
+ Add the following permissions to your android/app/src/main/AndroidManifest.xml inside the <manifest> tag:
 ```xml
-<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
 <!-- For background location (Android 10+) -->
@@ -38,15 +38,14 @@ Add the following permissions to your android/app/src/main/AndroidManifest.xml i
 
 <!-- For Android 13+ notification permission (if your service shows notifications) -->
 <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+```
 Foreground Service
 xml
 Copy
 Edit
 Make sure your app declares a foreground service in the manifest (if applicable):
 
-xml
-Copy
-Edit
+
 
 ```xml
      <service
@@ -61,9 +60,8 @@ Edit
             android:foregroundServiceType="location|dataSync"
             android:enabled="true"
             android:exported="false" />
-xml
-Copy
-Edit
+```
+
 Location Settings
 
 Ensure your device location settings allow background location tracking.
@@ -83,6 +81,7 @@ Open your ios/Runner/Info.plist and add these keys:
   <string>location</string>
   <string>fetch</string>
 </array>
+```
 Make sure Background Modes are enabled in your Xcode project with:
 
 Location updates
@@ -112,11 +111,9 @@ locationService.onLocationUpdate = (locationData) {
   print('Longitude: ${locationData['longitude']}');
   print('Timestamp: ${locationData['timestamp']}');
 };
-Example usage inside a Flutter widget:
 
-dart
-Copy
-Edit
+
+
 class LocationTrackerScreen extends StatefulWidget {
   // ...
 }
@@ -138,6 +135,7 @@ class _LocationTrackerScreenState extends State<LocationTrackerScreen> {
 
   // UI buttons to start/stop service and display location history
 }
+```
 Troubleshooting
 Make sure you grant Always location permission for background tracking to work on both Android and iOS.
 
