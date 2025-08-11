@@ -94,47 +94,101 @@ Import and create an instance of BackgroundLocationFetch (replace with your clas
 dart
 Copy
 Edit
-```xml
-import 'package:background_location_runner/background_location_fetch.dart';
+```dart
+void main() {
+    runApp(const MyApp());
+    }
 
-final BackgroundLocationFetch locationService = BackgroundLocationFetch();
+    class MyApp extends StatelessWidget {
+    const MyApp({super.key});
+    @override
+    Widget build(BuildContext context) {
+    return MaterialApp(home: const LocationTrackerScreen());
+    }
+    }
 
-// Start the location service
-await locationService.startService();
+    class LocationTrackerScreen extends StatefulWidget {
+    const LocationTrackerScreen({super.key});
 
-// Stop the location service
-await locationService.stopService();
+    @override
+    State<LocationTrackerScreen> createState() => _LocationTrackerScreenState();
+    }
 
-// Listen to location updates
-locationService.onLocationUpdate = (locationData) {
-  print('Latitude: ${locationData['latitude']}');
-  print('Longitude: ${locationData['longitude']}');
-  print('Timestamp: ${locationData['timestamp']}');
-};
+    class _LocationTrackerScreenState extends State<LocationTrackerScreen> {
+        final BackgroundLocationFetch locationService = BackgroundLocationFetch();
 
+        String _serviceStatus = 'Service not running';
+        List<Map<String, dynamic>> _locationHistory = [];
 
+        @override
+        void initState() {
+        super.initState();
 
-class LocationTrackerScreen extends StatefulWidget {
-  // ...
-}
-
-class _LocationTrackerScreenState extends State<LocationTrackerScreen> {
-  final BackgroundLocationFetch locationService = BackgroundLocationFetch();
-  List<Map<String, dynamic>> _locationHistory = [];
-
-  @override
-  void initState() {
-    super.initState();
-    locationService.onLocationUpdate = (locationData) {
-      setState(() {
+        // Setup listener callback
+        locationService.onLocationUpdate = (locationData) {
+        if (!mounted) return;
+        setState(() {
         _locationHistory.insert(0, locationData);
         if (_locationHistory.length > 20) _locationHistory.removeLast();
-      });
-    };
-  }
+        });
+        };
+        }
 
-  // UI buttons to start/stop service and display location history
-}
+
+        @override
+        Widget build(BuildContext context) {
+        return Scaffold(
+        appBar: AppBar(title: const Text('Background Location Tracker')),
+        body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+        children: [
+        Card(
+        child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+        children: [
+        const Text('Service Status', style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        Text(_serviceStatus),
+        const SizedBox(height: 16),
+        Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+        ElevatedButton(onPressed: locationService.startService, child: const Text('Start Service')),
+        ElevatedButton(onPressed:locationService.stopService, child: const Text('Stop Service')),
+        ],
+        ),
+        ],
+        ),
+        ),
+        ),
+        const SizedBox(height: 20),
+        const Text('Recent Locations', style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        Expanded(
+        child: ListView.builder(
+        itemCount: _locationHistory.length,
+        itemBuilder: (context, index) {
+        final loc = _locationHistory[index];
+        final dt = loc['timestamp'] as DateTime;
+        return ListTile(
+        title: Text(
+        'Lat: ${(loc['latitude'] as double).toStringAsFixed(6)}, Lng: ${(loc['longitude'] as double).toStringAsFixed(6)}',
+        ),
+        subtitle: Text('Time: $dt'),
+        dense: true,
+        );
+        },
+        ),
+        ),
+        ],
+        ),
+        ),
+        );
+        }
+        }
+
 ```
 Troubleshooting
 Make sure you grant Always location permission for background tracking to work on both Android and iOS.
