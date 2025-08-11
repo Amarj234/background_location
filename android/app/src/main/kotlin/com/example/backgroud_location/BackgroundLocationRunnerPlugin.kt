@@ -4,26 +4,26 @@ import androidx.annotation.NonNull
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugin.common.MethodChannel.MethodCallHandler
+import io.flutter.plugin.common.MethodChannel.Result
 
-class BackgroundLocationRunnerPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
+/** BackgroundLocationRunnerPlugin */
+class BackgroundLocationRunnerPlugin : FlutterPlugin, MethodCallHandler {
     private lateinit var channel: MethodChannel
 
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-        channel = MethodChannel(flutterPluginBinding.binaryMessenger, "com.example.backgroud_location/service")
+        channel = MethodChannel(flutterPluginBinding.binaryMessenger, "background_location_runner")
         channel.setMethodCallHandler(this)
     }
 
-    override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
+    override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
         when (call.method) {
-            "startLocationService" -> {
-                // start location service here
-                result.success(null)
+            "getPlatformVersion" -> {
+                result.success("Android ${android.os.Build.VERSION.RELEASE}")
             }
-            "stopLocationService" -> {
-                // stop location service here
-                result.success(null)
+            else -> {
+                result.notImplemented()
             }
-            else -> result.notImplemented()
         }
     }
 

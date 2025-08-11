@@ -1,7 +1,7 @@
 name: background_location_runner
 description: A Flutter plugin for background location tracking on Android and iOS.
 version: 1.0.0+1
-publish_to: 'https://pub.dev' # For public publishing
+#publish_to: "https://pub.dev" # For public publishing
 homepage: https://github.com/Amarj234/background_location
 repository: https://github.com/Amarj234/background_location
 author: Amarj234 <amarj234@gmail.com>
