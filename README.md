@@ -25,16 +25,10 @@ dependencies:
       url: https://github.com/Amarj234/background_location_runner.git
       ref: main
 
-
+---
 Android Setup
 Permissions
-
 Add the following permissions to your android/app/src/main/AndroidManifest.xml inside the <manifest> tag:
-
-xml
-Copy
-Edit  
-
 ```xml
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
