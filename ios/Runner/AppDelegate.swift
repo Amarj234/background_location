@@ -2,27 +2,35 @@ import Flutter
 import UIKit
 import CoreLocation
 
-@UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate {
+@main
+@objc class AppDelegate: FlutterAppDelegate, CLLocationManagerDelegate {
     var locationManager: CLLocationManager?
 
-    func application(_ application: UIApplication,
-                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        locationManager = CLLocationManager()
-        locationManager?.delegate = self
-        locationManager?.requestAlwaysAuthorization()
-        locationManager?.allowsBackgroundLocationUpdates = true
-        locationManager?.pausesLocationUpdatesAutomatically = false
-        locationManager?.startUpdatingLocation()
-        return true
-    }
+    override func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+    ) -> Bool {
+        let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
+        let iosLocationChannel = FlutterMethodChannel(name: "location_data", binaryMessenger: controller.binaryMessenger)
 
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        if let location = locations.last {
-            print("Lat: \(location.coordinate.latitude), Lng: \(location.coordinate.longitude)")
-            // Save to UserDefaults so Flutter can read it later
-            UserDefaults.standard.set(location.coordinate.latitude, forKey: "last_lat")
-            UserDefaults.standard.set(location.coordinate.longitude, forKey: "last_lng")
+        iosLocationChannel.setMethodCallHandler { [weak self] (call, result) in
+            if call.method == "getLastLocation" {
+                let lat = UserDefaults.standard.double(forKey: "last_lat")
+                let lng = UserDefaults.standard.double(forKey: "last_lng")
+
+                if lat != 0 && lng != 0 {
+                    result([
+                               "latitude": lat,
+                               "longitude": lng
+                           ])
+                } else {
+                    result(nil)
+                }
+            } else {
+                result(FlutterMethodNotImplemented)
+            }
         }
+
+        return super.application(application, didFinishLaunchingWithOptions: launchOptions)
     }
 }
