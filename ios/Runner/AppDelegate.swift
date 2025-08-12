@@ -11,7 +11,7 @@ import Flutter
     ) -> Bool {
         let controller = window?.rootViewController as! FlutterViewController
         let serviceChannel = FlutterMethodChannel(
-            name: "com.example.backgroud_location/service",
+            name: "com.example.background_location_runner/service",
             binaryMessenger: controller.binaryMessenger
         )
 

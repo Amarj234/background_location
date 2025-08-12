@@ -8,7 +8,7 @@ public class BackgroundLocationRunnerPlugin: NSObject, FlutterPlugin {
         let messenger = registrar.messenger()
 
         let serviceChannel = FlutterMethodChannel(
-            name: "com.example.backgroud_location/service",
+            name: "com.example.background_location_runner/service",
             binaryMessenger: messenger
         )
 

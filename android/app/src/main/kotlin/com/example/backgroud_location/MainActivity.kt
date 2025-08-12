@@ -1,4 +1,4 @@
-package com.example.backgroud_location
+package com.example.background_location_runner
 
 import android.content.Intent
 import android.os.Build
@@ -18,7 +18,7 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         GeneratedPluginRegistrant.registerWith(flutterEngine)
 
-        serviceChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.example.backgroud_location/service")
+        serviceChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.example.background_location_runner/service")
         locationChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "location_updates")
 
         serviceChannel?.setMethodCallHandler { call, result ->

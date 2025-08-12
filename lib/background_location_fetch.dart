@@ -8,7 +8,7 @@ typedef LocationUpdateCallback = void Function(LocationDataModel locationData);
 
 class BackgroundLocationFetch {
   static const MethodChannel _locationChannel = MethodChannel('location_updates');
-  final _serviceChannel = const MethodChannel('com.example.backgroud_location/service');
+  final _serviceChannel = const MethodChannel('com.example.background_location_runner/service');
 
   LocationUpdateCallback? onLocationUpdate;
 

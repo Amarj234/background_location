@@ -23,7 +23,7 @@ class LocationTrackerScreen extends StatefulWidget {
 
 class _LocationTrackerScreenState extends State<LocationTrackerScreen> {
   final _serviceChannel = const MethodChannel(
-    'com.example.backgroud_location/service',
+    'com.example.background_location_runner/service',
   );
   final _locationChannel = const MethodChannel('location_updates');
 

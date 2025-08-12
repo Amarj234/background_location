@@ -1,4 +1,4 @@
-package com.example.backgroud_location
+package com.example.background_location_runner
 
 import android.Manifest
 import android.app.*
