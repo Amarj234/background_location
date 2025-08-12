@@ -20,11 +20,11 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-plugin:
-  platforms:
-    android:
-      package: com.example.background_location_runner
-      pluginClass: BackgroundLocationRunnerPlugin
-    ios:
-      pluginClass: BackgroundLocationRunnerPlugin
+  plugin:
+    platforms:
+      android:
+        package: com.example.background_location_runner
+        pluginClass: BackgroundLocationRunnerPlugin
+      ios:
+        pluginClass: BackgroundLocationRunnerPlugin
 
